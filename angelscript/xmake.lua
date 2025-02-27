@@ -73,11 +73,30 @@ target('anglescript')
 add_rules('lc_basic_settings', {
     project_kind = 'shared'
 })
-add_includedirs('source')
+add_includedirs('include')
 add_defines('AS_NO_EXCEPTIONS', 'ANGELSCRIPT_EXPORT')
 add_defines('ANGELSCRIPT_DLL_LIBRARY_IMPORT', {
     public = true
 })
 add_files('source/**.cpp')
 add_deps('anglescript_assembly')
+on_load(function(target)
+    local add_on_path = path.join(path.directory(os.scriptdir()), "add_on")
+    print(add_on_path)
+    target:add("files", 
+        path.join(add_on_path, "datetime/*.cpp"),
+        path.join(add_on_path, "scriptany/*.cpp"),
+        path.join(add_on_path, "scriptarray/*.cpp"),
+        path.join(add_on_path, "scriptbuilder/*.cpp"),
+        path.join(add_on_path, "scriptdictionary/*.cpp"),
+        path.join(add_on_path, "scriptfile/*.cpp"),
+        path.join(add_on_path, "scriptgrid/*.cpp"),
+        path.join(add_on_path, "scripthandle/*.cpp"),
+        path.join(add_on_path, "scripthelper/*.cpp"),
+        path.join(add_on_path, "scriptstdstring/*.cpp"),
+        path.join(add_on_path, "scriptmath/*.cpp"),
+        path.join(add_on_path, "serializer/*.cpp"),
+        path.join(add_on_path, "weakref/*.cpp")
+    )
+end)
 target_end()
