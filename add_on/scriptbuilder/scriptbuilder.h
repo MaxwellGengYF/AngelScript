@@ -54,7 +54,7 @@ typedef int(*PRAGMACALLBACK_t)(const std::string &pragmaText, CScriptBuilder &bu
 
 // Helper class for loading and pre-processing script files to
 // support include directives and metadata declarations
-class CScriptBuilder
+class AS_API CScriptBuilder
 {
 public:
 	CScriptBuilder();

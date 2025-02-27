@@ -1,4 +1,4 @@
-target('anglescript_assembly')
+target('angelscript_assembly')
 add_rules('lc_basic_settings', {
     project_kind = 'object',
     toolchain = 'msvc'
@@ -36,7 +36,7 @@ on_config(function(target)
             else
                 unsupported_compiler()
             end
-        elseif is_arch("arm") or is_arch('arm64') then
+        elseif is_arch('arm') or is_arch('arm64') then
             if (cc == 'clang' or cc == 'clangxx' or cc == 'clang-cl' or cc == 'clang_cl' or cc == 'cl') then
                 _add_files('as_callfunc_arm_msvc.asm')
             else
@@ -69,34 +69,27 @@ on_config(function(target)
 end)
 target_end()
 
-target('anglescript')
+target('angelscript')
 add_rules('lc_basic_settings', {
     project_kind = 'shared'
 })
-add_includedirs('include')
+add_includedirs('include', {
+    public = true
+})
 add_defines('AS_NO_EXCEPTIONS', 'ANGELSCRIPT_EXPORT')
-add_defines('ANGELSCRIPT_DLL_LIBRARY_IMPORT', {
+add_defines('ANGELSCRIPT_DLL_LIBRARY_IMPORT', 'AS_USE_NAMESPACE', {
     public = true
 })
 add_files('source/**.cpp')
-add_deps('anglescript_assembly')
+add_deps('angelscript_assembly')
 on_load(function(target)
-    local add_on_path = path.join(path.directory(os.scriptdir()), "add_on")
-    print(add_on_path)
-    target:add("files", 
-        path.join(add_on_path, "datetime/*.cpp"),
-        path.join(add_on_path, "scriptany/*.cpp"),
-        path.join(add_on_path, "scriptarray/*.cpp"),
-        path.join(add_on_path, "scriptbuilder/*.cpp"),
-        path.join(add_on_path, "scriptdictionary/*.cpp"),
-        path.join(add_on_path, "scriptfile/*.cpp"),
-        path.join(add_on_path, "scriptgrid/*.cpp"),
-        path.join(add_on_path, "scripthandle/*.cpp"),
-        path.join(add_on_path, "scripthelper/*.cpp"),
-        path.join(add_on_path, "scriptstdstring/*.cpp"),
-        path.join(add_on_path, "scriptmath/*.cpp"),
-        path.join(add_on_path, "serializer/*.cpp"),
-        path.join(add_on_path, "weakref/*.cpp")
-    )
+    local add_on_path = path.join(path.directory(os.scriptdir()), 'add_on')
+    target:add('files', path.join(add_on_path, 'datetime/*.cpp'), path.join(add_on_path, 'scriptany/*.cpp'),
+        path.join(add_on_path, 'scriptarray/*.cpp'), path.join(add_on_path, 'scriptbuilder/*.cpp'),
+        path.join(add_on_path, 'scriptdictionary/*.cpp'), path.join(add_on_path, 'scriptfile/*.cpp'),
+        path.join(add_on_path, 'scriptgrid/*.cpp'), path.join(add_on_path, 'scripthandle/*.cpp'),
+        path.join(add_on_path, 'scripthelper/*.cpp'), path.join(add_on_path, 'scriptstdstring/*.cpp'),
+        path.join(add_on_path, 'scriptmath/*.cpp'), path.join(add_on_path, 'serializer/*.cpp'),
+        path.join(add_on_path, 'weakref/*.cpp'))
 end)
 target_end()
