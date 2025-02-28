@@ -24,6 +24,47 @@ void print(std::string &msg) {
     printf("%s", msg.c_str());
 }
 
+class CBytecodeStream : public AngelScript::asIBinaryStream {
+public:
+    FILE *f;
+    CBytecodeStream(char const *name, bool write) {
+        f = fopen(name, write ? "wb" : "rb");
+    }
+
+    int Write(const void *ptr, AngelScript::asUINT size) override {
+        if (size == 0) return -1;
+        fwrite(ptr, size, 1, f);
+        return 0;
+    }
+    int Read(void *ptr, AngelScript::asUINT size) override {
+        if (size == 0) return -1;
+        fread(ptr, size, 1, f);
+        return 0;
+    }
+    ~CBytecodeStream() {
+        if (f) {
+            fclose(f);
+        }
+    }
+};
+
+void LoadScriptFile(const char *fileName, std::string &script) {
+    script.clear();
+    // Open the file in binary mode
+    FILE *f = fopen("test.as", "rb");
+
+    // Determine the size of the file
+    fseek(f, 0, SEEK_END);
+    int len = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    // Load the entire file in one call
+    script.resize(len);
+    fread(&script[0], len, 1, f);
+
+    fclose(f);
+}
+
 int main() {
     using namespace AngelScript;
     asSetGlobalMemoryFunctions(
@@ -49,35 +90,61 @@ int main() {
     // Register the function that we want the scripts to call
     r = engine->RegisterGlobalFunction("void print(const string &in)", asFUNCTION(print), asCALL_CDECL);
     assert(r >= 0);
-    // The CScriptBuilder helper is an add-on that loads the file,
-    // performs a pre-processing pass if necessary, and then tells
-    // the engine to build a script module.
-    CScriptBuilder builder;
-    r = builder.StartNewModule(engine, "MyModule");
-    if (r < 0) {
-        // If the code fails here it is usually because there
-        // is no more memory to allocate the module
-        printf("Unrecoverable error while starting a new module.\n");
-        return -1;
-    }
-    r = builder.AddSectionFromFile("test.as");
-    if (r < 0) {
-        // The builder wasn't able to load the file. Maybe the file
-        // has been removed, or the wrong name was given, or some
-        // preprocessing commands are incorrectly written.
-        printf("Please correct the errors in the script and try again.\n");
-        return -1;
-    }
-    r = builder.BuildModule();
-    if (r < 0) {
-        // An error occurred. Instruct the script writer to fix the
-        // compilation errors that were listed in the output stream.
-        printf("Please correct the errors in the script and try again.\n");
-        return -1;
-    }
     // Find the function that is to be called.
-    asIScriptModule *mod = engine->GetModule("MyModule");
+    // asIScriptModule *shared_mod = engine->GetModule("shared", asGM_ALWAYS_CREATE);
+    // if (!shared_mod) {
+    //     printf("Create module failed.");
+    //     return -1;
+    // }
+    CScriptBuilder builder;
+    {
+        if (builder.StartNewModule(engine, "shared_module") < 0) {
+            printf("Start module failed.");
+            return -1;
+        }
+        asIScriptModule *mod = engine->GetModule("shared_module");
+        if (!mod) {
+            printf("Create module failed.");
+            return -1;
+        }
+        // Disable cache temporarily
+        r = builder.AddSectionFromFile("module_class.as");
+        if (r < 0) {
+            printf("Add failed.");
+            return -1;
+        }
+        r = builder.BuildModule();
+        if (r < 0) {
+            printf("build failed.");
+            return -1;
+        }
+    }
+    asIScriptModule *mod;
+    {
+        if (builder.StartNewModule(engine, "test") < 0) {
+            printf("Start module failed.");
+            return -1;
+        }
+        mod = engine->GetModule("test");
+        if (!mod) {
+            printf("Create module failed.");
+            return -1;
+        }
+        // Disable cache temporarily
+        r = builder.AddSectionFromFile("test.as");
+        if (r < 0) {
+            printf("Add failed.");
+            return -1;
+        }
+        r = builder.BuildModule();
+        if (r < 0) {
+            printf("build failed.");
+            return -1;
+        }
+    }
+    // return 0;
     asIScriptFunction *func = mod->GetFunctionByDecl("void main()");
+
     if (func == 0) {
         // The function couldn't be found. Instruct the script writer
         // to include the expected function in the script.
