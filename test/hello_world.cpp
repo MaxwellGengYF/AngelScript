@@ -142,7 +142,6 @@ int main() {
             return -1;
         }
     }
-    // return 0;
     asIScriptFunction *func = mod->GetFunctionByDecl("void main()");
 
     if (func == 0) {
